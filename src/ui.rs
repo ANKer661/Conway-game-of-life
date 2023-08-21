@@ -42,7 +42,6 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),
                 justify_content: JustifyContent::SpaceBetween,
-                flex_wrap: FlexWrap::WrapReverse,
                 ..default()
             },
             background_color: Color::NONE.into(),
