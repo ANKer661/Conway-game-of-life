@@ -1,6 +1,6 @@
-pub mod inputs;
-pub mod simulation;
-pub mod ui;
+mod inputs;
+mod simulation;
+mod ui;
 
 use self::inputs::InputsPlugin;
 use self::simulation::SimulationPlugin;
