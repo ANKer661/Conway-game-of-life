@@ -1,13 +1,11 @@
+pub mod inputs;
+pub mod simulation;
+pub mod ui;
+
+use self::inputs::InputsPlugin;
+use self::simulation::SimulationPlugin;
+use self::ui::MainMenuPlugin;
 use bevy::prelude::*;
-
-mod ui;
-mod inputs;
-mod simulation;
-
-use ui::MainMenuPlugin;
-use inputs::InputsPlugin;
-use simulation::SimulationPlugin;
-
 
 fn main() {
     App::new()

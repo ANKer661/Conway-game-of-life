@@ -1,67 +1,16 @@
-use super::inputs::MainCamera;
-use super::ui::{GameExitEvent, SimulationState};
+use super::components::*;
+use super::resources::*;
+use crate::inputs::MainCamera;
+use crate::ui::systems::{GameExitEvent, SimulationState};
 use bevy::app::AppExit;
 use bevy::prelude::*;
-use bevy::time::common_conditions::on_timer;
-use bevy::utils::Duration;
+
 use bevy::window::PrimaryWindow;
 
 const SPRITE_SIZE: f32 = 32.0;
 const GRID_SIZE: i32 = 100;
 
-pub struct SimulationPlugin;
-
-impl Plugin for SimulationPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_state::<SimulationState>()
-            .insert_resource(ClearColor(Color::rgb(0.156, 0.172, 0.203)))
-            .insert_resource(MouseWorldPositionDraw(None))
-            .insert_resource(MouseWorldPositionErase(None))
-            .insert_resource(IsSimulationRunning(false))
-            .add_systems(Startup, setup)
-            .add_systems(
-                FixedUpdate,
-                (set_cursor_world_position, cell_interaction)
-                    .chain()
-                    .run_if(on_timer(Duration::from_secs_f32(0.016))),
-            )
-            .add_systems(
-                FixedUpdate,
-                simulation_step.run_if(on_timer(Duration::from_secs_f32(0.2))),
-            )
-            .add_systems(Update, (set_simulation, unset_simulation))
-            .add_systems(Update, exit_game);
-    }
-}
-
-#[derive(Default, Resource)]
-struct MouseWorldPositionDraw(Option<(f32, f32)>);
-
-#[derive(Default, Resource)]
-struct MouseWorldPositionErase(Option<(f32, f32)>);
-
-#[derive(Component)]
-struct Cell {
-    state: CellState,
-}
-
-enum CellState {
-    Alive,
-    Dead,
-    Empty,
-}
-
-#[derive(Default, Resource)]
-struct SpriteImage {
-    empty_cell: Handle<Image>,
-    alive_cell: Handle<Image>,
-    dead_cell: Handle<Image>,
-}
-
-#[derive(Default, Resource)]
-struct IsSimulationRunning(bool);
-
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     for x in 0..GRID_SIZE {
         for y in 0..GRID_SIZE {
             commands.spawn((
@@ -92,7 +41,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     });
 }
 
-fn set_cursor_world_position(
+pub fn set_cursor_world_position(
     window_query: Query<&Window, With<PrimaryWindow>>,
     main_camera_query: Query<(&Transform, &OrthographicProjection), With<MainCamera>>,
     mouse_button: Res<Input<MouseButton>>,
@@ -131,7 +80,7 @@ fn get_mouse_world(
     Vec3::new(left + pos.x * proj.scale, bottom - pos.y * proj.scale, 0.0)
 }
 
-fn cell_interaction(
+pub fn cell_interaction(
     mut cell_query: Query<(&mut Cell, &mut Handle<Image>, &Transform)>,
     mut mouse_world_pos_draw: ResMut<MouseWorldPositionDraw>,
     mut mouse_world_pos_erase: ResMut<MouseWorldPositionErase>,
@@ -175,7 +124,7 @@ fn is_in_cell_bounds(xy: (f32, f32), center: (f32, f32), dims: (f32, f32)) -> bo
         && xy.1 <= center.1 + dims.1
 }
 
-fn exit_game(
+pub fn exit_game(
     mut exit_writer: EventWriter<AppExit>,
     mut game_exit_event_reader: EventReader<GameExitEvent>,
 ) {
@@ -184,7 +133,7 @@ fn exit_game(
     }
 }
 
-fn simulation_step(
+pub fn simulation_step(
     mut cell_query: Query<(&mut Cell, &mut Handle<Image>)>,
     is_runing: Res<IsSimulationRunning>,
     sprite_images: Res<SpriteImage>,
@@ -205,7 +154,7 @@ fn simulation_step(
 
             for xi in (x - 1)..=(x + 1) {
                 for yi in (y - 1)..=(y + 1) {
-                    if (xi != x && yi != y)
+                    if (xi != x || yi != y)
                         && xi >= 0
                         && xi < GRID_SIZE
                         && yi >= 0
@@ -237,7 +186,7 @@ fn simulation_step(
     }
 }
 
-fn set_simulation(
+pub fn set_simulation(
     mut start_sim: ResMut<IsSimulationRunning>,
     sim_state: Res<State<SimulationState>>,
 ) {
@@ -246,7 +195,7 @@ fn set_simulation(
     }
 }
 
-fn unset_simulation(
+pub fn unset_simulation(
     mut start_sim: ResMut<IsSimulationRunning>,
     sim_state: Res<State<SimulationState>>,
 ) {

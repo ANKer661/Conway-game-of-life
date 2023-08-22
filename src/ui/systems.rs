@@ -1,8 +1,6 @@
+use super::components::{ButtonType, ClassicButton};
+use super::styles::*;
 use bevy::prelude::*;
-
-pub const NORMAL_BUTTON_COLOR: Color = Color::rgb(0.8, 0.8, 0.8);
-pub const HOVERED_BUTTON_COLOR: Color = Color::rgb(0.4, 0.8, 0.8);
-pub const PRESSED_BUTTON_COLOR: Color = Color::rgb(0.1, 1.0, 1.0);
 
 #[derive(Event)]
 pub struct GameExitEvent;
@@ -14,36 +12,11 @@ pub enum SimulationState {
     Start,
 }
 
-#[derive(Component)]
-pub struct ClassicButton(ButtonType);
-
-pub enum ButtonType {
-    Play,
-    Stop,
-    Exit,
-}
-
-pub struct MainMenuPlugin;
-
-impl Plugin for MainMenuPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_event::<GameExitEvent>()
-            .add_state::<SimulationState>()
-            .add_systems(Startup, setup)
-            .add_systems(Update, button_system);
-    }
-}
-
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     // UI root
     commands
         .spawn(NodeBundle {
-            style: Style {
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                justify_content: JustifyContent::SpaceBetween,
-                ..default()
-            },
+            style: UI_ROOT_STYLE,
             background_color: Color::NONE.into(),
             ..default()
         })
@@ -51,12 +24,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         .with_children(|parent| {
             parent
                 .spawn(NodeBundle {
-                    style: Style {
-                        width: Val::Percent(100.0),
-                        height: Val::Px(100.0),
-                        border: UiRect::all(Val::Px(5.0)),
-                        ..default()
-                    },
+                    style: BUTTON_BG_STYLE,
                     background_color: Color::rgb(0.1, 0.1, 0.1).into(),
                     ..default()
                 })
@@ -64,12 +32,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                 .with_children(|parent| {
                     parent
                         .spawn(NodeBundle {
-                            style: Style {
-                                width: Val::Percent(100.0),
-                                height: Val::Percent(100.0),
-                                justify_content: JustifyContent::FlexEnd,
-                                ..default()
-                            },
+                            style: BUTTON_FILL_STYLE,
                             background_color: Color::rgb(0.2, 0.2, 0.2).into(),
                             ..default()
                         })
@@ -107,14 +70,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
 fn build_classic_button(asset_server: &Res<AssetServer>) -> ButtonBundle {
     ButtonBundle {
-        style: Style {
-            width: Val::Px(150.0),
-            height: Val::Px(50.0),
-            margin: UiRect::all(Val::Auto),
-            justify_content: JustifyContent::Center,
-            align_items: AlignItems::Center,
-            ..default()
-        },
+        style: CLASSIC_BUTTON_STYLE,
         background_color: NORMAL_BUTTON_COLOR.into(),
         image: UiImage {
             texture: asset_server.load("sprites/button.png"),
@@ -129,11 +85,7 @@ fn build_classic_text(text: &str, asset_server: &Res<AssetServer>) -> TextBundle
         text: Text {
             sections: vec![TextSection::new(
                 text,
-                TextStyle {
-                    font: asset_server.load("fonts/Symtext.ttf"),
-                    font_size: 32.0,
-                    color: Color::WHITE.into(),
-                },
+                get_classic_text_style(&asset_server),
             )],
             ..default()
         },
@@ -141,7 +93,7 @@ fn build_classic_text(text: &str, asset_server: &Res<AssetServer>) -> TextBundle
     }
 }
 
-fn button_system(
+pub fn button_system(
     mut button_query: Query<
         (&Interaction, &mut BackgroundColor, &ClassicButton),
         (Changed<Interaction>, With<Button>),
